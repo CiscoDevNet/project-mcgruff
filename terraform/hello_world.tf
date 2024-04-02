@@ -3,3 +3,5 @@ resource "null_resource" "default" {
     command = "echo 'Hello World'"
   }
 }
+
+# touch
