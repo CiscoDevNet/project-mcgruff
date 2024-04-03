@@ -4,6 +4,8 @@
 
 Reference cloud application deployment incorporating various Cisco security technology APIs.  Focus on common real-world components and patterns, applying security best practices.
 
+![Network architecture](images/Network%20Architecture.png)
+
 ## Application
 
 A 'typical' containerized, client-server, web application with internal REST API and access group use-cases for at least 3 classes of users (admin/employee/external-customer).
