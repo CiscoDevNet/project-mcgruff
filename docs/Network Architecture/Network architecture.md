@@ -16,13 +16,13 @@ A 'typical' containerized, client-server, web application with internal REST API
 
 * [AWS EKS](https://aws.amazon.com/eks/) (Kubernetes) - single pod/node/cluster.
 
-* LAMP or similar, proposing [OpenCart](https://www.opencart.com/) in a [Binami container](https://bitnami.com/stack/opencart) for initial MVP.
+* LAMP or similar, proposing [OpenCart](https://www.opencart.com/) in a [Bitnami container](https://bitnami.com/stack/opencart) for initial MVP.
 
 * [AWS Relational Database Services (RDS)](https://aws.amazon.com/rds/) hosting MySQL.
 
 #### Network Infrastructure
 
-* [AWS Directory](https://aws.amazon.com/directoryservice/) providing MS Activer Directory.
+* [AWS Directory](https://aws.amazon.com/directoryservice/) providing MS Active Directory.
 
 * AWS Virtual Private Cloud (hosting EKS cluster) for egress/ingress and standard network services (DNS)
 
