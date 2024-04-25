@@ -72,5 +72,3 @@ resource "kubernetes_service" "application_load_balancer" {
     }
   }
 }
-
-
