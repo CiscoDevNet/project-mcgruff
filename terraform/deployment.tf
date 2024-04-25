@@ -1,48 +1,49 @@
-data "aws_eks_cluster_auth" "eks_cluster_auth" {
-  name = aws_eks_cluster.eks_cluster.name
+data "aws_eks_cluster_auth" "application_cluster_auth" {
+  name = aws_eks_cluster.application_cluster.name
 }
 
 provider "kubernetes" {
-  host                   = aws_eks_cluster.eks_cluster.endpoint
-  cluster_ca_certificate = base64decode(aws_eks_cluster.eks_cluster.certificate_authority[0].data)
-  token                  = data.aws_eks_cluster_auth.eks_cluster_auth.token
-  #   exec {
-  #     api_version = "client.authentication.k8s.io/v1beta1"
-  #     args        = ["eks", "get-token", "--cluster-name", var.cluster_name]
-  #     command     = "aws"
-  #   }
+  host                   = aws_eks_cluster.application_cluster.endpoint
+  cluster_ca_certificate = base64decode(aws_eks_cluster.application_cluster.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.application_cluster_auth.token
+    exec {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      args        = ["eks", "get-token", "--cluster-name", aws_eks_cluster.application_cluster.name]
+      command     = "aws"
+    }
 }
 
-resource "kubernetes_namespace" "application" {
+resource "kubernetes_namespace" "application_namespace" {
   metadata {
     name = "application"
   }
 }
 
-resource "kubernetes_deployment" "application" {
+resource "kubernetes_deployment" "application_deployment" {
   metadata {
-    name      = "application"
-    namespace = kubernetes_namespace.application.metadata[0].name
+    name      = "deployment"
+    namespace = kubernetes_namespace.application_namespace.metadata[0].name
   }
 
   spec {
     replicas = 1
     selector {
       match_labels = {
-        "app.kubernetes.io/name" = "application"
+        "app.kubernetes.io/name" = "application_deployment"
       }
     }
     template {
       metadata {
         labels = {
-          "app.kubernetes.io/name" = "application"
+          "app.kubernetes.io/name" = "application_deployment"
         }
       }
       spec {
         container {
           image = "nginx"
-          name  = "application"
+          name  = "nginx"
           port {
+            name = "web"
             container_port = 80
           }
         }
@@ -51,53 +52,25 @@ resource "kubernetes_deployment" "application" {
   }
 }
 
-resource "kubernetes_service" "application" {
+resource "kubernetes_service" "application_load_balancer" {
   metadata {
-    name      = "application"
-    namespace = kubernetes_namespace.application.metadata.0.name
+    name      = "loadbalancer"
+    namespace = kubernetes_namespace.application_namespace.metadata.0.name
+    annotations = {
+      "service.beta.kubernetes.io/aws-load-balancer-type" = "nlb"
+    }
   }
   spec {
     selector = {
-      "app.kubernetes.io/name" = "application"
+      "app.kubernetes.io/name" = "application_deployment"
     }
-    type = "ClusterIP"
+    type = "LoadBalancer"
     port {
       protocol = "TCP"
       port        = 80
-      target_port = 80
+      target_port = "web"
     }
   }
 }
 
-resource "kubernetes_ingress_v1" "application" {
-  metadata {
-    name = "application"
-    namespace = "application"
-    annotations = {
-      "alb.ingress.kubernetes.io/scheme" = "internet-facing"
-      "alb.ingress.kubernetes.io/target-type" = "ip"
-    }
-  }
-#   wait_for_load_balancer = true
 
-  spec {
-    ingress_class_name = "alb"
-    rule {
-      http {
-        path {
-          path = "/"
-          path_type = "Prefix"
-          backend {
-            service {
-              name = "application"
-              port {
-                number = 80
-              }
-            }
-          }
-
-        }
-      }
-    }
-  }
-}
