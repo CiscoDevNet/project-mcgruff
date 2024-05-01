@@ -1,6 +1,0 @@
-aws_cft_stack_name = "application-cft-stack"
-VpcBlock = "192.168.0.0/16"
-PublicSubnet01Block = "192.168.0.0/18"
-PublicSubnet02Block = "192.168.64.0/18"
-PrivateSubnet01Block = "192.168.128.0/18"
-PrivateSubnet02Block = "192.168.192.0/18"
