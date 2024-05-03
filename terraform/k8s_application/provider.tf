@@ -13,10 +13,6 @@ terraform {
   }
 }
 
-module "global_variables" {
-  source = "../"
-}
-
 data "aws_eks_cluster" "cluster" {
   name = "cluster-${terraform.workspace}"
 }
