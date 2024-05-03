@@ -1,5 +1,5 @@
 data "aws_db_instance" "database" {
-  db_instance_identifier = "database"
+  db_instance_identifier = var.application_database_name
 }
 
 resource "kubernetes_persistent_volume_claim" "wordpress" {
@@ -7,7 +7,7 @@ resource "kubernetes_persistent_volume_claim" "wordpress" {
     name      = "wordpress"
     namespace = kubernetes_namespace.namespace.metadata[0].name
     labels = {
-      app = "deployment"
+      app = "wordpress"
     }
   }
   wait_until_bound = false
@@ -21,12 +21,12 @@ resource "kubernetes_persistent_volume_claim" "wordpress" {
   }
 }
 
-resource "kubernetes_deployment" "deployment" {
+resource "kubernetes_deployment" "wordpress" {
   metadata {
-    name      = "deployment"
+    name      = "wordpress"
     namespace = kubernetes_namespace.namespace.metadata[0].name
     labels = {
-      app = "deployment"
+      app = "wordpress"
     }
   }
 
@@ -35,14 +35,14 @@ resource "kubernetes_deployment" "deployment" {
 
     selector {
       match_labels = {
-        app = "deployment"
+        app = "wordpress"
       }
     }
 
     template {
       metadata {
         labels = {
-          app = "deployment"
+          app = "wordpress"
         }
       }
 
@@ -79,6 +79,10 @@ resource "kubernetes_deployment" "deployment" {
             name  = "WORDPRESS_DB_NAME"
             value = data.aws_db_instance.database.db_name
           }
+          env {
+            name  = "WORDPRESS_CONFIG_EXTRA"
+            value = "define('WP_SITEURL', '//');define('WP_HOME', '//');"
+          }
         }
       }
     }
@@ -114,10 +118,10 @@ resource "aws_acm_certificate" "certificate" {
   certificate_body = tls_self_signed_cert.self_signed_cert.cert_pem
 }
 
-resource "kubernetes_service" "load_balancer" {
+resource "kubernetes_service" "wordpress_load_balancer" {
 
   metadata {
-    name      = "load-balancer"
+    name      = "wordpress-load-balancer"
     namespace = kubernetes_namespace.namespace.metadata.0.name
 
     annotations = {
@@ -128,11 +132,11 @@ resource "kubernetes_service" "load_balancer" {
       "service.beta.kubernetes.io/aws-load-balancer-ssl-ports"       = "443"
     }
   }
-  wait_for_load_balancer = true
+  # wait_for_load_balancer = true
   spec {
     external_traffic_policy = "Local"
     selector = {
-      app = "deployment"
+      app = "wordpress"
     }
     type = "LoadBalancer"
 
@@ -144,10 +148,11 @@ resource "kubernetes_service" "load_balancer" {
   }
   depends_on = [
     helm_release.aws_load_balancer,
-    kubernetes_deployment.deployment
+    kubernetes_deployment.wordpress,
+    kubernetes_service_account.aws_load_balancer
   ]
 }
 
 output "application_url" {
-  value = kubernetes_service.load_balancer.status[0].load_balancer[0].ingress[0].hostname
+  value = kubernetes_service.wordpress_load_balancer.status[0].load_balancer[0].ingress[0].hostname
 }

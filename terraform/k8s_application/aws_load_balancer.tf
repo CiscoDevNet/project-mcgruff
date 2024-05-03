@@ -1,6 +1,6 @@
 resource "kubernetes_namespace" "namespace" {
   metadata {
-    name = "namespace"
+    name = var.k8s_namespace_name
   }
 }
 
@@ -11,7 +11,7 @@ data "aws_iam_openid_connect_provider" "cluster" {
 module "lb_role" {
   source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
 
-  role_name                              = "cluster_load_balancer"
+  role_name                              = "aws-load-balancer"
   attach_load_balancer_controller_policy = true
 
   oidc_providers = {
@@ -22,7 +22,7 @@ module "lb_role" {
   }
 }
 
-resource "kubernetes_service_account" "load_balancer" {
+resource "kubernetes_service_account" "aws_load_balancer" {
   metadata {
     name      = "aws-load-balancer-controller"
     namespace = kubernetes_namespace.namespace.metadata.0.name
@@ -38,8 +38,6 @@ resource "kubernetes_service_account" "load_balancer" {
   depends_on = [ module.lb_role ]
 }
 
-data "aws_region" "region" {}
-
 data "aws_vpc" "vpc" {
   tags = {
     "Name" = "eks-${terraform.workspace}"
@@ -53,12 +51,12 @@ resource "helm_release" "aws_load_balancer" {
   namespace  = kubernetes_namespace.namespace.metadata.0.name
 
   depends_on = [
-    kubernetes_service_account.load_balancer
+    kubernetes_service_account.aws_load_balancer
   ]
 
   set {
     name  = "region"
-    value = data.aws_region.region.name
+    value = var.aws_region
   }
 
   set {
@@ -68,7 +66,7 @@ resource "helm_release" "aws_load_balancer" {
 
   set {
     name  = "image.repository"
-    value = "602401143452.dkr.ecr.${data.aws_region.region.name}.amazonaws.com/amazon/aws-load-balancer-controller"
+    value = "602401143452.dkr.ecr.${var.aws_region}.amazonaws.com/amazon/aws-load-balancer-controller"
   }
 
   set {

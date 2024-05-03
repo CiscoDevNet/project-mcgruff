@@ -7,3 +7,7 @@ terraform {
     }
   }
 }
+
+module "global_variables" {
+  source = "../"
+}
