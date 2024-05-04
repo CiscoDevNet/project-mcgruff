@@ -35,12 +35,12 @@ resource "kubernetes_service_account" "aws_load_balancer" {
       "eks.amazonaws.com/sts-regional-endpoints" = "true"
     }
   }
-  depends_on = [ module.lb_role ]
+  depends_on = [module.lb_role]
 }
 
 data "aws_vpc" "vpc" {
   tags = {
-    "Name" = "eks-${terraform.workspace}"
+    "Name" = var.vpc_name
   }
 }
 

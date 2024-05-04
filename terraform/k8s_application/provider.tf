@@ -14,11 +14,11 @@ terraform {
 }
 
 data "aws_eks_cluster" "cluster" {
-  name = "cluster-${terraform.workspace}"
+  name = var.cluster_name
 }
 
 data "aws_eks_cluster_auth" "cluster_auth" {
-  name = "cluster-${terraform.workspace}"
+  name = data.aws_eks_cluster.cluster.name
 }
 
 provider "kubernetes" {
