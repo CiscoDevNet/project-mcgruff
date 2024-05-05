@@ -13,6 +13,12 @@ terraform {
   }
 }
 
+data "aws_vpc" "vpc" {
+  tags = {
+    "Name" = var.vpc_name
+  }
+}
+
 data "aws_eks_cluster" "cluster" {
   name = var.cluster_name
 }

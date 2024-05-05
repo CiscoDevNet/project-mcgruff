@@ -1,7 +1,3 @@
-data "aws_db_instance" "database" {
-  db_instance_identifier = var.application_database_name
-}
-
 resource "kubernetes_persistent_volume_claim" "wordpress" {
   metadata {
     name      = "wordpress"
@@ -20,6 +16,15 @@ resource "kubernetes_persistent_volume_claim" "wordpress" {
     }
   }
 }
+
+data "aws_secretsmanager_secret" "database" {
+  arn = aws_db_instance.database.master_user_secret[0].secret_arn
+}
+
+data "aws_secretsmanager_secret_version" "database" {
+  secret_id = data.aws_secretsmanager_secret.database.id
+}
+
 
 resource "kubernetes_deployment" "wordpress" {
   metadata {
@@ -65,19 +70,19 @@ resource "kubernetes_deployment" "wordpress" {
           }
           env {
             name  = "WORDPRESS_DB_HOST"
-            value = data.aws_db_instance.database.address
+            value = aws_db_instance.database.address
           }
           env {
             name  = "WORDPRESS_DB_USER"
-            value = data.aws_db_instance.database.master_username
+            value = aws_db_instance.database.username
           }
           env {
             name  = "WORDPRESS_DB_PASSWORD"
-            value = "Cisco!123"
+            value = jsondecode(data.aws_secretsmanager_secret_version.database.secret_string)["password"]
           }
           env {
             name  = "WORDPRESS_DB_NAME"
-            value = data.aws_db_instance.database.db_name
+            value = aws_db_instance.database.db_name
           }
           env {
             name  = "WORDPRESS_CONFIG_EXTRA"
@@ -118,41 +123,84 @@ resource "aws_acm_certificate" "certificate" {
   certificate_body = tls_self_signed_cert.self_signed_cert.cert_pem
 }
 
-resource "kubernetes_service" "wordpress_load_balancer" {
-
+resource "kubernetes_service_v1" "wordpress_service" {
   metadata {
-    name      = "wordpress-load-balancer"
+    name      = "wordpress"
     namespace = kubernetes_namespace.namespace.metadata.0.name
-
-    annotations = {
-      "service.beta.kubernetes.io/aws-load-balancer-type"            = "external"
-      "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type" = "ip"
-      "service.beta.kubernetes.io/aws-load-balancer-scheme"          = "internet-facing"
-      "service.beta.kubernetes.io/aws-load-balancer-ssl-cert"        = aws_acm_certificate.certificate.arn
-      "service.beta.kubernetes.io/aws-load-balancer-ssl-ports"       = "443"
+    labels = {
+      app = "wordpress"
     }
   }
-  # wait_for_load_balancer = true
+
   spec {
-    external_traffic_policy = "Local"
+    type = "NodePort"
     selector = {
       app = "wordpress"
     }
-    type = "LoadBalancer"
-
     port {
-      port        = 443
-      target_port = 80
-      protocol    = "TCP"
+      port = 80
     }
   }
+}
+
+resource "kubernetes_ingress_v1" "wordpress_ingress" {
+  metadata {
+    name      = "wordpress"
+    namespace = kubernetes_namespace.namespace.metadata.0.name
+    labels = {
+      app = "wordpress"
+    }
+    annotations = {
+      "alb.ingress.kubernetes.io/load-balancer-name"   = "wordpress-ingress-load-balancer"
+      "alb.ingress.kubernetes.io/target-type"          = "ip"
+      "alb.ingress.kubernetes.io/scheme"               = "internet-facing"
+      "alb.ingress.kubernetes.io/certificate-arn"      = aws_acm_certificate.certificate.arn
+      "alb.ingress.kubernetes.io/listen-ports"         = jsonencode([{ "HTTP" : 80 }, { "HTTPS" : 443 }])
+      "alb.ingress.kubernetes.io/ssl-redirect" = "443"
+    }
+  }
+  wait_for_load_balancer = true
+
+  spec {
+    ingress_class_name = "alb"
+    rule {
+      http {
+        path {
+          path      = "/*"
+          path_type = "ImplementationSpecific"
+          backend {
+            service {
+              name = "wordpress"
+              port {
+                number = 80
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  timeouts {
+    create = "2m"
+    delete = "2m"
+  }
+
   depends_on = [
     helm_release.aws_load_balancer,
     kubernetes_deployment.wordpress,
-    kubernetes_service_account.aws_load_balancer
+    kubernetes_service_account.aws_load_balancer,
+    kubernetes_service_v1.wordpress_service
   ]
 }
 
+resource "null_resource" "local_exe1" {
+  depends_on = [ kubernetes_ingress_v1.wordpress_ingress ]
+  provisioner "local-exec" {
+    command = "aws elbv2 wait load-balancer-available --names wordpress-ingress-load-balancer"
+  }
+}
+
 output "application_url" {
-  value = kubernetes_service.wordpress_load_balancer.status[0].load_balancer[0].ingress[0].hostname
+  value = kubernetes_ingress_v1.wordpress_ingress.status[0].load_balancer[0].ingress[0].hostname
 }

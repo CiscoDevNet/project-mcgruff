@@ -38,12 +38,6 @@ resource "kubernetes_service_account" "aws_load_balancer" {
   depends_on = [module.lb_role]
 }
 
-data "aws_vpc" "vpc" {
-  tags = {
-    "Name" = var.vpc_name
-  }
-}
-
 resource "helm_release" "aws_load_balancer" {
   name       = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
