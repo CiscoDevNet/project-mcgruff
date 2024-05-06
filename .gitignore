@@ -163,3 +163,4 @@ cython_debug/
 **/terraform.tfstate.backup
 **/.terraform
 
+terraform/k8s_application/.terraform.tfstate.lock.info
