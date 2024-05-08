@@ -38,6 +38,8 @@ resource "kubernetes_service_account" "aws_load_balancer" {
   depends_on = [module.lb_role]
 }
 
+data "aws_region" "current" {}
+
 resource "helm_release" "aws_load_balancer" {
   name       = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
@@ -50,7 +52,7 @@ resource "helm_release" "aws_load_balancer" {
 
   set {
     name  = "region"
-    value = var.aws_region
+    value = data.aws_region.current.name
   }
 
   set {
@@ -60,7 +62,7 @@ resource "helm_release" "aws_load_balancer" {
 
   set {
     name  = "image.repository"
-    value = "602401143452.dkr.ecr.${var.aws_region}.amazonaws.com/amazon/aws-load-balancer-controller"
+    value = "602401143452.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/amazon/aws-load-balancer-controller"
   }
 
   set {

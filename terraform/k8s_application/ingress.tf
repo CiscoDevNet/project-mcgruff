@@ -38,10 +38,6 @@ resource "aws_acm_certificate_validation" "certificate" {
   certificate_arn         = aws_acm_certificate.certificate.arn
   validation_record_fqdns = [ for record in aws_route53_record.cert_validation_record : record.fqdn ]
 }
-# resource "aws_acm_certificate" "certificate" {
-#   private_key      = tls_private_key.private_key.private_key_pem
-#   certificate_body = tls_self_signed_cert.self_signed_cert.cert_pem
-# }
 
 resource "kubernetes_service_v1" "wordpress_service" {
   metadata {
