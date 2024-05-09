@@ -28,8 +28,8 @@ resource "aws_secretsmanager_secret_version" "active_directory_credential" {
 }
 
 resource "aws_directory_service_directory" "directory" {
-  name       = "directory.${var.domain_name}"
-  short_name = "directory"
+  name       = var.domain_name
+  short_name = var.vpc_name
   password   = random_string.active_directory_password.result
   edition    = "Standard"
   type       = "MicrosoftAD"

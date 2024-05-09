@@ -17,6 +17,8 @@ resource "aws_security_group" "allow_rds" {
   tags = {
     Name = "mcgruff-allow-rdp"
   }
+
+  depends_on = [ module.vpc ]
 }
 
 resource "aws_iam_role" "active_directory_domain_admin" {
@@ -80,7 +82,7 @@ resource "aws_instance" "jump_host" {
   instance_type          = "t2.small"
   subnet_id              = data.aws_subnets.vpc_public_subnets.ids[0]
   iam_instance_profile   = aws_iam_role.active_directory_domain_admin.name
-  vpc_security_group_ids = [aws_security_group.allow_rds.id]
+  vpc_security_group_ids = [ aws_security_group.allow_rds.id ]
   key_name               = var.key_pair_name
 
   metadata_options {
@@ -91,10 +93,8 @@ resource "aws_instance" "jump_host" {
   tags = {
     Name = "active-directory-jump-host"
   }
-}
 
-data "aws_iam_role" "AWSServiceRoleForAmazonSSM" {
-  name = "AWSServiceRoleForAmazonSSM"
+  depends_on = [ aws_security_group.allow_rds ]
 }
 
 resource "aws_ssm_document" "join_domain" {
@@ -123,7 +123,7 @@ DOC
     Name = "join-domain-${aws_directory_service_directory.directory.id}"
   }
 
-  depends_on = [aws_directory_service_directory.directory]
+  depends_on = [ aws_directory_service_directory.directory ]
 }
 
 resource "aws_ssm_association" "join_domain" {
@@ -131,21 +131,25 @@ resource "aws_ssm_association" "join_domain" {
 
   targets {
     key    = "InstanceIds"
-    values = [aws_instance.jump_host.id]
+    values = [ aws_instance.jump_host.id ]
   }
 
   # Enable and provide an (existing) S3 bucket name to view output logs
   # output_location {
   #   s3_bucket_name = "2e91b1e3-77b6-4bc5-8eb7-f183f06f2490"
+      # s3_key_prefix = "mcgruff-ssm-command-logs"
   # }
+
+  depends_on = [ aws_ssm_document.join_domain ]
 }
 
 data "aws_ssm_document" "AWS-RunPowerShellScript" {
   name = "AWS-RunPowerShellScript"
 }
 
-resource "aws_ssm_association" "install_Rsat_tools" {
+resource "aws_ssm_association" "install_rsat_tools" {
   name = data.aws_ssm_document.AWS-RunPowerShellScript.name
+  wait_for_success_timeout_seconds = 240
 
   parameters = {
     commands = "Install-WindowsFeature -Name GPMC,RSAT-AD-PowerShell,RSAT-AD-AdminCenter,RSAT-ADDS-Tools,RSAT-DNS-Server"
@@ -153,13 +157,13 @@ resource "aws_ssm_association" "install_Rsat_tools" {
 
   targets {
     key    = "InstanceIds"
-    values = [aws_instance.jump_host.id]
+    values = [ aws_instance.jump_host.id ]
+  }
 
     # Enable and provide an (existing) S3 bucket name to view output logs
     # output_location {
     #   s3_bucket_name = ""
     # }
-  }
 
   depends_on = [
     aws_instance.jump_host,
@@ -172,9 +176,4 @@ output "Active_Directory_management_instance_details" {
     Public_DNS = "${aws_instance.jump_host.public_dns}"
     Admin_Credential = aws_secretsmanager_secret.active_directory_credential.name
   }
-
-  depends_on = [
-    aws_instance.jump_host,
-    aws_directory_service_directory.directory
-  ]
 }

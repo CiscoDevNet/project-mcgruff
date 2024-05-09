@@ -136,6 +136,26 @@ Resources will need to be cleaned up in reverse order of their creation:
   kubectl -n namespace exec -it deployment-bbfd776f5-cs4fj -- /bin/bash
   ```
 
+* **Port forwarding from instance to local PC**:
+
+  E.g. `3389` for RDP.
+
+  ```
+  aws ssm start-session --target yourinstanceid --document-name AWS-StartPortForwardingSession --parameters "localPortNumber=55678,portNumber=3389"
+  ```
+
+* **Check windows instance domain membership**:
+
+  **Local PC:**
+  ```
+  aws ssm start-session --target yourInstanceId
+  ```
+
+  **Instance:**
+  ```
+  Get-WmiObject Win32_ComputerSystem
+  ```
+
 ## Example/estimated apply times (us-east-1)
 
 | Config             | File             | Create | Destroy |
