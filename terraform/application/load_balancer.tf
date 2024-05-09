@@ -51,6 +51,7 @@ resource "helm_release" "aws_load_balancer" {
   set {
     name  = "region"
     value = var.aws_region
+  }
 
   set {
     name  = "vpcId"
