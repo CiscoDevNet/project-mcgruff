@@ -3,11 +3,11 @@ terraform {
 
     aws = {
       source  = "hashicorp/aws"
-      version = "5.42.0"
+      # version = "5.42.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "2.29.0"
+      # version = "2.29.0"
     }
   }
   backend "s3" {
