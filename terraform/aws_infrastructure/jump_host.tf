@@ -174,6 +174,6 @@ resource "aws_ssm_association" "install_rsat_tools" {
 output "Active_Directory_management_instance_details" {
   value = {
     Public_DNS = "${aws_instance.jump_host.public_dns}"
-    Admin_Credential = aws_secretsmanager_secret.active_directory_credential.name
+    Credential_SecretManager_Name = aws_secretsmanager_secret.active_directory_credential.name
   }
 }

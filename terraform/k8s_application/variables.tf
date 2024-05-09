@@ -40,7 +40,7 @@ variable "vpc_public_subnets" {
 variable "cluster_name" {
     description = "EKS Kubernetes cluster name."
     type = string
-    default = "mcgruff"
+    default = "mcgruff-pod-host"
 }
 
 variable "k8s_namespace_name" {
