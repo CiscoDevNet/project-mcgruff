@@ -42,7 +42,7 @@ Also using: AWS [IAM](https://aws.amazon.com/iam/) / [ACM](https://aws.amazon.co
 
    **Note:** This project creates AWS resources that will incur (modest) ongoing charges - be sure to perform the steps in [Cleanup AWS Resources](#cleanup-aws-resources) when they are no longer needed.
 
-* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) installation - assumes login credentials have been obtained and CLI commands can be executed against the target AWS account/region.
+* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) installation - assumes [login credentials have been configured](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) and CLI commands can be executed against the target AWS account/region.
 
 * [AWS Route 53](https://aws.amazon.com/route53/) registered domain, owned by the AWS admin account above.  This domain will be used for the web-site/MS-AD - required for integration with Cisco Duo SSO/MFA.
 
@@ -87,7 +87,7 @@ Also using: AWS [IAM](https://aws.amazon.com/iam/) / [ACM](https://aws.amazon.co
 
    Allow this to complete (approx. 35 minutes).
 
-   Output will indicate the DNS name of the Active Directory management instance (for connection via RDP) and the Secrets Manager name of the admin credentia:
+   Output will indicate the DNS name of the Active Directory management instance (for connection via RDP) and the  [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) name of the admin credentia:
 
    TBD EXAMPLE
 
@@ -118,7 +118,7 @@ Also using: AWS [IAM](https://aws.amazon.com/iam/) / [ACM](https://aws.amazon.co
 | Config         | File             | Create | Destroy |
 | -------------- | ---------------- | ------ | ------- |
 | infrastructure | (all)            |  34:54 |   11:02 |
-|                | vpc.tf           |   0:26 |    0:57 |
+|                | vpc.tf           |   2:12 |    0:57 |
 |                | cluster.tf       |  10:52 |   12:11 |
 |                | directory.tf     |  28:54 |    8:14 |
 |                | jump_host.tf     |   ?:?? |    ?:?? |
@@ -151,6 +151,34 @@ Resources will need to be cleaned up in reverse order of their creation:
    Wait for this to complete (approx. ??? minutes)
 
 ## Notes
+
+* **Individual** `.tf` files can be moved into/out-of respective `disabled` folders to remove/create portioins of a config.
+
+* **AWS CLI credentials timeout** - This can occur during Terraform `apply` and may result in interruption of the run (potentially causing corruption/sync problems between the actual resources and the Terraform state file.)
+
+  It is possible to modify (i.e. increase) the AWS authentication session duration via: **IAM/Access management/Roles/{admin role}/Summary/Edit**.
+
+  **Note:** Do this at your own risk and only in non-production environments - extended session lifetime can be a security risk.
+
+  Once modified, you will want to modify your [AWS CLI authentication mechanism](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) to start requesting the longer session duration.
+
+* **Corruption/sync issues in Terraform state files** - This can occur due to `apply` run interruptions (credential timeouit/network connection loss), or even just when provider-side errors/issues cause an abort.
+
+  This can be difficult to recover from, but a few initial things to try, in increasing order of desperation:
+
+  * Correct any problems in the configuration and re-`apply`.
+
+  * Try `terraform plan -refresh=ADDRESS`, see [Command: plan](https://developer.hashicorp.com/terraform/cli/commands/plan#replace-address).
+
+  * Destroy resources affected by the error using Terraform.  Try moving individual `.tf` files into `disabled/` or commenting-out specific resources.
+
+  * Destroy the entire Terraform configuration and start fresh (`terraform destroy --var-file="../global.tfvars`).
+
+  * If all else fails, you may need to manually delete some/all resources via the AWS admin console and delete the Terraform state files from the S3 bucket.
+
+  * Start Googling, e.g. [How to Recover Your Deployment From a Terraform Apply Crash](https://eclipsys.ca/terraform-tips-how-to-recover-your-deployment-from-a-terraform-apply-crash/).
+
+  
 
 * **Update kubectl credentials** - Once the EKS cluster has been created, you can refresh kubectl credentials with:
 

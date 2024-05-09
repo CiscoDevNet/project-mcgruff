@@ -9,6 +9,11 @@ module "eks" {
   enable_cluster_creator_admin_permissions = true
   create_cloudwatch_log_group              = false
 
+  cluster_tags = {
+    Name = var.cluster_name
+
+  }
+
   cluster_addons = {
     coredns = {
       most_recent = true
@@ -21,9 +26,6 @@ module "eks" {
     }
     aws-ebs-csi-driver = {
       most_recent = true
-    }
-    cluster_tags = {
-      Name = var.cluster_name
     }
   }
 
