@@ -38,7 +38,9 @@ Also using: AWS [IAM](https://aws.amazon.com/iam/) / [ACM](https://aws.amazon.co
 
 ## Pre-Requisites
 
-* **Amazon AWS admin account** - this must be a paid account.  Note: this project creates AWS resources that will incur (modest) ongoing charges - be sure to perform the steps in [Cleanup AWS Resources](#cleanup-aws-resources) as needed.
+* **Amazon AWS admin account** - this must be a paid account.  It is **highly** recommended that this _not_ be a production account, and/or that it is based in an AWS region not used by any production resources.
+
+   **Note:** This project creates AWS resources that will incur (modest) ongoing charges - be sure to perform the steps in [Cleanup AWS Resources](#cleanup-aws-resources) when they are no longer needed.
 
 * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) installation - assumes login credentials have been obtained and CLI commands can be executed against the target AWS account/region.
 
@@ -57,31 +59,74 @@ Also using: AWS [IAM](https://aws.amazon.com/iam/) / [ACM](https://aws.amazon.co
    cd project-mcgruff
    ```
 
-1. Edit `/terraform/global.tfvars` as needed.
+1. Create a new instance connection key pair (i.e. named `mcgruff`) via **EC2/Network & Security/Key Pairs**.
 
-   All values can be left commented/default except `domain_name`, which must be provided.
+   **Note:** be sure to download and save the associated `PEM` file, as you will need this to decrypt the AD management instance's admin password - i.e. for RDP access.
+
+1. Create an S3 bucket - this will be used for Terraform state files.
+
+   Update `terraform/infrastructure/provider.tf` and `terraform/infrastructure/provider.tf` S3 `backend` sections with your S3 bucker name.
+
+1. Edit `/terraform/global.tfvars`.
+
+   All values can be left commented/default except `domain_name` and `key_pair_name`, which must be provided.
 
 1. First, create the infrastructure resources:
 
+   **(First run only)
    ```
-   cd terraform/aws_infrastructure
+   terraform init
+   ```
+
+   ```
+   cd terraform/infrastructure
    terraform apply -var-file="../global.tfvars"
    ```
 
-   Allow this to complete (approx. 30 minutes).
+   **Hint:** You can use `pv` to provide a running timed-elapsed: `terraform apply -var-file="../global.tfvars" | pv -t`
+
+   Allow this to complete (approx. 35 minutes).
+
+   Output will indicate the DNS name of the Active Directory management instance (for connection via RDP) and the Secrets Manager name of the admin credentia:
+
+   TBD EXAMPLE
+
+   **Note:** an RDP session to the AD management instance's local machine Administrator account can be accomplished from the AWS console via **EC2/Instances/Instance/Connect**
 
 1. Next, create resources and deploy the application:
 
+   **(First run only)**
    ```
-   cd terraform/k8s_application
+   terraform init
+   ```
+
+   ```
+   cd terraform/application
    terraform apply -var-file="../global.tfvars"
    ```
 
    Allow this to complete (approx. 10 minutes).
 
+   Output will provide the URL for the running application:
+
+   TBD EXAMPLE
+
 1. Output from the application deployment will indicate the application URL, based on the provided domain name, e.g.: `https://wordpress.mcgruff.click`
 
-<!-- 1. TBD accessing MS AD administration -->
+## Example/estimated apply times (us-east-1)
+
+| Config         | File             | Create | Destroy |
+| -------------- | ---------------- | ------ | ------- |
+| infrastructure | (all)            |  34:54 |   11:02 |
+|                | vpc.tf           |   0:26 |    0:57 |
+|                | cluster.tf       |  10:52 |   12:11 |
+|                | directory.tf     |  28:54 |    8:14 |
+|                | jump_host.tf     |   ?:?? |    ?:?? |
+| application    | (all)            |   9:17 |    ?:?? |
+|                | database.tf      |   4:56 |    4:50 |
+|                | load_balancer.tf |   0:31 |    0:15 |
+|                | deployment.tf    |   0:41 |    0:06 |
+|                | ingress.tf       |   3:35 |    1:36 |
 
 ## Cleanup AWS Resources
 
@@ -90,7 +135,7 @@ Resources will need to be cleaned up in reverse order of their creation:
 1. Destroy the Kubernetes application resources/deployment:
 
    ```
-   cd terraform/k8s_application
+   cd terraform/application
    terraform destroy -var-file="global.tfvars"
    ```
 
@@ -99,7 +144,7 @@ Resources will need to be cleaned up in reverse order of their creation:
 1. Destroy the AWS infrastructure resources:
 
    ```
-   cd terraform/aws_infrastructure
+   cd terraform/infrastructure
    terraform destroy -var-file="global.tfvars"
    ```
 
@@ -113,7 +158,7 @@ Resources will need to be cleaned up in reverse order of their creation:
   aws eks update-kubeconfig --region us-east-1 --name CLUSTERNAME
   ```
 
-  **Note:** this is done automatically when the `terraform/aws_infrastructure` configuration is applied.
+  **Note:** this is done automatically when the `terraform/infrastructure` configuration is applied.
 
 * **View Kubernetes logs** - for the application deployment:
 
@@ -155,17 +200,3 @@ Resources will need to be cleaned up in reverse order of their creation:
   ```
   Get-WmiObject Win32_ComputerSystem
   ```
-
-## Example/estimated apply times (us-east-1)
-
-| Config             | File             | Create | Destroy |
-| ------------------ | ---------------- | ------ | ------- |
-| aws_infrastructure | (all)            |  34:54 |   11:02 |
-|                    | vpc.tf           |   0:26 |    0:57 |
-|                    | cluster.tf       |  10:52 |   12:11 |
-|                    | directory.tf     |  28:54 |    8:14 |
-| k8s_application    | (all)            |   9:17 |         |
-|                    | database.tf      |   4:56 |    4:50 |
-|                    | load_balancer.tf |   0:31 |    0:15 |
-|                    | deployment.tf    |   0:41 |    0:06 |
-|                    | ingress.tf       |   3:35 |    1:36 |

@@ -22,6 +22,9 @@ module "eks" {
     aws-ebs-csi-driver = {
       most_recent = true
     }
+    cluster_tags = {
+      Name = var.cluster_name
+    }
   }
 
   eks_managed_node_group_defaults = {

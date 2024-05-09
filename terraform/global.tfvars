@@ -6,6 +6,7 @@ key_pair_name = "mcgruff"
 
 # Override variable defaults with values below as desired.
 
+# aws_region = "us-east-1"
 # aws_availability_zones = [
 #     "us-east-1a",
 #     "us-east-1b"

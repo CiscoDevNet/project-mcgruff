@@ -1,3 +1,9 @@
+variable "aws_region" {
+  description = "AWS region in which to create resources."
+  type = string
+  default = "us-east-1"
+}
+
 variable "aws_availability_zones" {
   description = "Region availability zones in which to create resources."
   type = list(string)
@@ -64,12 +70,6 @@ variable "application_database_name" {
 variable "domain_name" {
   description = "Domain name for the project (Active Directory / application).  This must be an existing, registered Route 53 domain in the AWS account."
   type = string
-}
-
-variable "jump_host_ami" {
-  description = "AMI suitable for Windows 2022 Server in your region."
-  type = string
-  default = "ami-0f496107db66676ff" // us-east-1
 }
 
 variable "key_pair_name" {
