@@ -6,6 +6,16 @@ Reference cloud application deployment incorporating various Cisco security tech
 
 ![Network architecture](images/network_architecture.png)
 
+Test using:
+
+* Ubuntu 22.04
+
+* Terraform 1.8.3
+
+* Kubectl 1.30.0
+
+* Helm 3.14.4
+
 ## Application
 
 A 'typical' containerized, client-server web application with internal REST API and access group use-cases for at least 3 classes of users (admin/employee/external-customer).
@@ -151,6 +161,12 @@ Resources will need to be cleaned up in reverse order of their creation:
    Wait for this to complete (approx. ??? minutes)
 
 ## Notes
+
+* **Component versions** - This project intentionally avoids specifying versions for any of its components (e.g. Terraform providers, cluster add-ons, AWS NLB, AMIs, etc.) - 'latest' versions are requested/assumed.  As a result, drift may occur over time and (hopefully minor) version-compatibility issues may arise in the project.
+
+  **Note:** In production, you would definitely want to identify/specify component versions whenever possible for consistency/reproducibility reasons.
+
+* **Resource version updates/upgrades** -   AWS makes availiable update/upgrade services for many/most components if provides (notable exception: the [AWS load-balancer controller](https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.4/deploy/installation/#create-update-strategy)) - you will likely want to investigate/implement these in a production environment.  (TODO: modify this project to implement those as a best practice).
 
 * **Individual** `.tf` files can be moved into/out-of respective `disabled` folders to remove/create portioins of a config.
 
