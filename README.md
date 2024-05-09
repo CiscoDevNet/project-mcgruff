@@ -99,9 +99,15 @@ Also using: AWS [IAM](https://aws.amazon.com/iam/) / [ACM](https://aws.amazon.co
 
    Output will indicate the DNS name of the Active Directory management instance (for connection via RDP) and the  [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) name of the admin credentia:
 
-   TBD EXAMPLE
+   ```
+   Active_Directory_management_instance_details = {
+    "Credential_SecretManager_Name" = "active-directory-credential-20240redacted5093500000001"
+   "Public_DNS" = "ec2-redacted-51.compute-1.amazonaws.com"
+   }
+   ```
+   An RDP session to the AD management instance's local machine Administrator account will require decrypting the Admin password via the AWS console: **EC2/Instances/Instance/Connect**.  With the password, you can use a standard RDP client to connect using the `Public_DNS` address.
 
-   **Note:** an RDP session to the AD management instance's local machine Administrator account can be accomplished from the AWS console via **EC2/Instances/Instance/Connect**
+   **Note:** It may take a few minutes before the AD management instance is fully started/online/SSM-managed before you can connect to it.
 
 1. Next, create resources and deploy the application:
 
@@ -130,8 +136,8 @@ Also using: AWS [IAM](https://aws.amazon.com/iam/) / [ACM](https://aws.amazon.co
 | infrastructure | (all)            |  34:54 |   11:02 |
 |                | vpc.tf           |   2:12 |    0:57 |
 |                | cluster.tf       |  10:52 |   12:11 |
-|                | directory.tf     |  28:54 |    8:14 |
-|                | jump_host.tf     |   ?:?? |    ?:?? |
+|                | directory.tf     |  32:52 |    8:14 |
+|                | jump_host.tf     |   1:01 |    ?:?? |
 | application    | (all)            |   9:17 |    ?:?? |
 |                | database.tf      |   4:56 |    4:50 |
 |                | load_balancer.tf |   0:31 |    0:15 |
@@ -194,7 +200,7 @@ Resources will need to be cleaned up in reverse order of their creation:
 
   * Start Googling, e.g. [How to Recover Your Deployment From a Terraform Apply Crash](https://eclipsys.ca/terraform-tips-how-to-recover-your-deployment-from-a-terraform-apply-crash/).
 
-  
+## Useful Commands  
 
 * **Update kubectl credentials** - Once the EKS cluster has been created, you can refresh kubectl credentials with:
 

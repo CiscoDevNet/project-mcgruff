@@ -9,7 +9,7 @@ terraform {
 
   backend "s3" {
     bucket = "mcgruff-terraform-204a97d0-11b6-4b10-8ed7-85eec2885eaa"
-    key = "terraform-state-application"
+    key = "terraform-state-infrastructure"
     region = "us-east-1"
   }
 }
