@@ -250,3 +250,26 @@ Resources will need to be cleaned up in reverse order of their creation:
   ```
   Get-WmiObject Win32_ComputerSystem
   ```
+
+* **Manually Join AD Management Instance to Domain**
+
+  **Local PC:**
+  ```
+  aws ssm start-session --target yourInstanceId
+  ```
+
+  **Instance:**
+  
+  ```
+  Add-Computer -DomainName “mcgruff.com” -Credential “Admin”
+  ```
+  
+  You will be asked for the domain Admin password (created during `infrastructure/` run.)
+
+* **Manually install AD tools on the AD Managerment Instance**
+
+  **Instance:**
+
+  ```
+  Install-WindowsFeature -Name GPMC,RSAT-AD-PowerShell,RSAT-AD-AdminCenter,RSAT-ADDS-Tools,RSAT-DNS-Server
+  ```
