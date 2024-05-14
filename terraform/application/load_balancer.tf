@@ -42,6 +42,7 @@ resource "helm_release" "aws_load_balancer" {
   name       = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
+  version    = "1.7.2"
   namespace  = kubernetes_namespace.namespace.metadata.0.name
 
   depends_on = [

@@ -84,11 +84,18 @@ resource "aws_instance" "jump_host" {
   iam_instance_profile   = aws_iam_role.active_directory_domain_admin.name
   vpc_security_group_ids = [aws_security_group.allow_rds.id]
   key_name               = var.key_pair_name
+  get_password_data      = true
 
   metadata_options {
     http_endpoint = "enabled"
     http_tokens   = "required"
   }
+
+  user_data = <<-DOC
+    <powershell>
+    Install-WindowsFeature -Name GPMC,RSAT-AD-PowerShell,RSAT-AD-AdminCenter,RSAT-ADDS-Tools,RSAT-DNS-Server
+    </powershell>
+  DOC
 
   tags = {
     Name = "active-directory-jump-host"
@@ -97,84 +104,34 @@ resource "aws_instance" "jump_host" {
   depends_on = [aws_security_group.allow_rds]
 }
 
-resource "aws_ssm_document" "join_domain" {
-  name          = "join-domain-${aws_directory_service_directory.directory.id}"
-  document_type = "Command"
-  content       = <<DOC
-{
-    "schemaVersion": "1.0",
-    "description": "Automatic Domain Join Configuration",
-    "runtimeConfig": {
-        "aws:domainJoin": {
-            "properties": {
-                "directoryId": "${aws_directory_service_directory.directory.id}",
-                "directoryName": "${aws_directory_service_directory.directory.name}",
-                "dnsIpAddresses": [
-                     "${sort(aws_directory_service_directory.directory.dns_ip_addresses)[0]}",
-                     "${sort(aws_directory_service_directory.directory.dns_ip_addresses)[1]}"
-                  ]
-            }
-        }
-    }
-}
-DOC
-
-  tags = {
-    Name = "join-domain-${aws_directory_service_directory.directory.id}"
-  }
-
-  depends_on = [aws_directory_service_directory.directory]
+data "aws_ssm_document" "AWS-JoinDirectoryServiceDomain" {
+  name = "AWS-JoinDirectoryServiceDomain"
 }
 
-resource "aws_ssm_association" "join_domain" {
-  name = aws_ssm_document.join_domain.name
+resource "aws_ssm_association" "AWS-JoinDirectoryServiceDomain" {
+  name = data.aws_ssm_document.AWS-JoinDirectoryServiceDomain.name
 
   targets {
     key    = "InstanceIds"
     values = [aws_instance.jump_host.id]
   }
-
-  # Enable and provide an (existing) S3 bucket name to view output logs
-  output_location {
-    s3_bucket_name = "mcgruff-terraform-204a97d0-11b6-4b10-8ed7-85eec2885eaa "
-    s3_key_prefix  = "mcgruff-ssm-command-logs"
-  }
-
-  depends_on = [aws_ssm_document.join_domain]
-}
-
-data "aws_ssm_document" "AWS-RunPowerShellScript" {
-  name = "AWS-RunPowerShellScript"
-}
-
-resource "aws_ssm_association" "install_rsat_tools" {
-  name                             = data.aws_ssm_document.AWS-RunPowerShellScript.name
-  wait_for_success_timeout_seconds = 240
 
   parameters = {
-    commands = "Install-WindowsFeature -Name GPMC,RSAT-AD-PowerShell,RSAT-AD-AdminCenter,RSAT-ADDS-Tools,RSAT-DNS-Server"
-  }
-
-  targets {
-    key    = "InstanceIds"
-    values = [aws_instance.jump_host.id]
+    directoryId = aws_directory_service_directory.directory.id
+    directoryName = aws_directory_service_directory.directory.name
+    # dnsIpAddresses = jsonencode(aws_directory_service_directory.directory.dns_ip_addresses)
+    dnsIpAddresses = sort(aws_directory_service_directory.directory.dns_ip_addresses)[0]
   }
 
   # Enable and provide an (existing) S3 bucket name to view output logs
   output_location {
-    s3_bucket_name = "mcgruff-terraform-204a97d0-11b6-4b10-8ed7-85eec2885eaa "
+    s3_bucket_name = "mcgruff-terraform-204a97d0-11b6-4b10-8ed7-85eec2885eaa"
     s3_key_prefix  = "mcgruff-ssm-command-logs"
   }
-
-  depends_on = [
-    aws_instance.jump_host,
-    aws_ssm_association.join_domain
-  ]
 }
 
-output "Active_Directory_management_instance_details" {
+output "Active_Directory_Management_Instance_Location" {
   value = {
-    Public_DNS                    = "${aws_instance.jump_host.public_dns}"
-    Credential_SecretManager_Name = aws_secretsmanager_secret.active_directory_credential.name
+    Public_DNS = "${aws_instance.jump_host.public_dns}"
   }
 }

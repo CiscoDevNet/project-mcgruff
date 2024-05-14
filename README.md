@@ -6,9 +6,11 @@ Reference cloud application deployment incorporating various Cisco security tech
 
 ![Network architecture](images/network_architecture.png)
 
-Test using:
+Tested using:
 
 * Ubuntu 22.04
+
+* Kubernetes 1.29
 
 * Terraform 1.8.3
 
@@ -75,7 +77,9 @@ Also using: AWS [IAM](https://aws.amazon.com/iam/) / [ACM](https://aws.amazon.co
 
 1. Create an S3 bucket - this will be used for Terraform state files.
 
-   Update `terraform/infrastructure/provider.tf` and `terraform/infrastructure/provider.tf` S3 `backend` sections with your S3 bucker name.
+   Be sure keep encryption and bucket versioning default/enabled.
+
+   Then, update `terraform/infrastructure/provider.tf` and `terraform/infrastructure/provider.tf` S3 `backend` sections with your S3 bucket name and region.
 
 1. Edit `/terraform/global.tfvars`.
 
@@ -137,7 +141,7 @@ Also using: AWS [IAM](https://aws.amazon.com/iam/) / [ACM](https://aws.amazon.co
 |                | vpc.tf           |   2:12 |    0:57 |
 |                | cluster.tf       |  10:52 |   12:11 |
 |                | directory.tf     |  32:52 |    8:14 |
-|                | jump_host.tf     |   1:01 |    ?:?? |
+|                | jump_host.tf     |   2:54 |    ?:?? |
 | application    | (all)            |   9:17 |    ?:?? |
 |                | database.tf      |   4:56 |    4:50 |
 |                | load_balancer.tf |   0:31 |    0:15 |
@@ -168,7 +172,9 @@ Resources will need to be cleaned up in reverse order of their creation:
 
 ## Notes
 
-* **Component versions** - This project intentionally avoids specifying versions for any of its components (e.g. Terraform providers, cluster add-ons, AWS NLB, AMIs, etc.) - 'latest' versions are requested/assumed.  As a result, drift may occur over time and (hopefully minor) version-compatibility issues may arise in the project.
+* **`mariadb.sh` and `wordpress.sh`** - These script files will launch MariaDB and Wordpress instances in local Docker containers, for testing/experimentation.  Optional to use.
+
+* **Component versions** - This project specifies component versions where possible (e.g. Terraform providers, AWS NLB, etc.) - one notable exception being the Windows AMI for the AD management instance.  This should make things reproducible, but may drift re functionality and/or security updates on certain components over time.  An update/upgrade plan (and automation) for keeping things up-to-date yet stable is advised.
 
   **Note:** In production, you would definitely want to identify/specify component versions whenever possible for consistency/reproducibility reasons.
 
@@ -209,6 +215,12 @@ Resources will need to be cleaned up in reverse order of their creation:
   ```
 
   **Note:** this is done automatically when the `terraform/infrastructure` configuration is applied.
+
+* **View aws-load-balancer-controller versions**
+
+  ```
+  helm search repo eks/aws-load-balancer-controller --versions
+  ```
 
 * **View Kubernetes logs** - for the application deployment:
 
@@ -261,7 +273,7 @@ Resources will need to be cleaned up in reverse order of their creation:
   **Instance:**
   
   ```
-  Add-Computer -DomainName “mcgruff.com” -Credential “Admin”
+  Add-Computer -DomainName “mcgruff.click” -Credential “Admin”
   ```
   
   You will be asked for the domain Admin password (created during `infrastructure/` run.)

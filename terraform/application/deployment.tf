@@ -17,14 +17,6 @@ resource "kubernetes_persistent_volume_claim" "wordpress" {
   }
 }
 
-data "aws_secretsmanager_secret" "database" {
-  arn = aws_db_instance.database.master_user_secret[0].secret_arn
-}
-
-data "aws_secretsmanager_secret_version" "database" {
-  secret_id = data.aws_secretsmanager_secret.database.id
-}
-
 resource "kubernetes_deployment" "wordpress" {
   metadata {
     name      = "wordpress"
@@ -77,7 +69,7 @@ resource "kubernetes_deployment" "wordpress" {
           }
           env {
             name  = "WORDPRESS_DB_PASSWORD"
-            value = jsondecode(data.aws_secretsmanager_secret_version.database.secret_string)["password"]
+            value = jsondecode(aws_secretsmanager_secret_version.mcgruff_database_credential.secret_string)["password"]
           }
           env {
             name  = "WORDPRESS_DB_NAME"

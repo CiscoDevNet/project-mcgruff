@@ -22,7 +22,7 @@ key_pair_name = "mcgruff"
 #     "10.0.5.0/24",
 #   ]
 # cluster_name = "mcgruff-pod-host"
-# k8s_namespace_name = "namespace"
+# k8s_namespace_name = "mcgruff"
 # node_group_name = "mcgruff"
 # application_database_name = "wordpress"
 

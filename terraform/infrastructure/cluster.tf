@@ -1,8 +1,9 @@
 module "eks" {
-  source = "terraform-aws-modules/eks/aws"
+  source  = "terraform-aws-modules/eks/aws"
+  version = "20.10.0"
 
-  cluster_name = var.cluster_name
-
+  cluster_name                             = var.cluster_name
+  cluster_version                          = "1.29"
   vpc_id                                   = module.vpc.vpc_id
   subnet_ids                               = module.vpc.private_subnets
   cluster_endpoint_public_access           = true
@@ -11,21 +12,20 @@ module "eks" {
 
   cluster_tags = {
     Name = var.cluster_name
-
   }
 
   cluster_addons = {
     coredns = {
-      most_recent = true
+      # most_recent = true
     }
     kube-proxy = {
-      most_recent = true
+      # most_recent = true
     }
     vpc-cni = {
-      most_recent = true
+      # most_recent = true
     }
     aws-ebs-csi-driver = {
-      most_recent = true
+      # most_recent = true
     }
   }
 

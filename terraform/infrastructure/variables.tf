@@ -52,7 +52,7 @@ variable "cluster_name" {
 variable "k8s_namespace_name" {
     description = "Namespace to create/use in the K8s cluster."
     type = string
-    default = "namespace"
+    default = "mcgruff"
 }
 
 variable "node_group_name" {

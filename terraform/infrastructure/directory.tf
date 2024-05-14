@@ -10,27 +10,27 @@ data "aws_subnets" "vpc_public_subnets" {
   depends_on = [module.vpc]
 }
 
-resource "random_string" "active_directory_password" {
+resource "random_string" "mcgruff_active_directory_password" {
   length           = 16
   override_special = "_!$"
 }
 
-resource "aws_secretsmanager_secret" "active_directory_credential" {
-  name_prefix = "active-directory-credential-"
+resource "aws_secretsmanager_secret" "mcgruff_active_directory_credential" {
+  name_prefix = "mcgruff-active-directory-credential-"
 }
 
-resource "aws_secretsmanager_secret_version" "active_directory_credential" {
-  secret_id     = aws_secretsmanager_secret.active_directory_credential.id
+resource "aws_secretsmanager_secret_version" "mcgruff_active_directory_credential" {
+  secret_id     = aws_secretsmanager_secret.mcgruff_active_directory_credential.id
   secret_string = jsonencode({
     user_name = "Admin"
-    password = aws_directory_service_directory.directory.password
+    password = random_string.mcgruff_active_directory_password.result
   })
 }
 
 resource "aws_directory_service_directory" "directory" {
   name       = var.domain_name
   short_name = var.vpc_name
-  password   = random_string.active_directory_password.result
+  password   = jsondecode(aws_secretsmanager_secret_version.mcgruff_active_directory_credential.secret_string)["password"]
   edition    = "Standard"
   type       = "MicrosoftAD"
   # enable_sso = true
@@ -41,5 +41,10 @@ resource "aws_directory_service_directory" "directory" {
   }
 }
 
+output "Active_Directory_Secrets_Manager_Credential" {
+  value = {
+    Credential_Name = aws_secretsmanager_secret.mcgruff_active_directory_credential.name
+  }
+}
 
 
