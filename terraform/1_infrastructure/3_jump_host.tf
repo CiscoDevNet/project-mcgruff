@@ -117,7 +117,7 @@ resource "aws_ssm_association" "AWS-JoinDirectoryServiceDomain" {
   }
 
   parameters = {
-    directoryId = aws_directory_service_directory.directory.id
+    directoryId   = aws_directory_service_directory.directory.id
     directoryName = aws_directory_service_directory.directory.name
     # dnsIpAddresses = jsonencode(aws_directory_service_directory.directory.dns_ip_addresses)
     dnsIpAddresses = sort(aws_directory_service_directory.directory.dns_ip_addresses)[0]

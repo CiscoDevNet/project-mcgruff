@@ -1,5 +1,5 @@
 module "vpc" {
-  source = "terraform-aws-modules/vpc/aws"
+  source  = "terraform-aws-modules/vpc/aws"
   version = "5.8.1"
 
   name = var.vpc_name
@@ -27,7 +27,7 @@ module "vpc" {
   }
 
   tags = {
-    Name                                                   = var.vpc_name
+    Name                                        = var.vpc_name
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
   }
 }

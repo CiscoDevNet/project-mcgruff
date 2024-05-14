@@ -4,7 +4,7 @@ data "aws_route53_zone" "zone" {
 }
 
 resource "aws_acm_certificate" "certificate" {
-  domain_name       = var.domain_name
+  domain_name               = var.domain_name
   subject_alternative_names = ["*.${var.domain_name}"]
 
   validation_method = "DNS"
@@ -36,7 +36,7 @@ resource "aws_acm_certificate_validation" "certificate" {
     create = "5m"
   }
   certificate_arn         = aws_acm_certificate.certificate.arn
-  validation_record_fqdns = [ for record in aws_route53_record.cert_validation_record : record.fqdn ]
+  validation_record_fqdns = [for record in aws_route53_record.cert_validation_record : record.fqdn]
 }
 
 resource "kubernetes_service_v1" "wordpress_service" {
@@ -67,12 +67,12 @@ resource "kubernetes_ingress_v1" "wordpress_ingress" {
       app = "wordpress"
     }
     annotations = {
-      "alb.ingress.kubernetes.io/load-balancer-name"   = "wordpress-ingress-load-balancer"
-      "alb.ingress.kubernetes.io/target-type"          = "ip"
-      "alb.ingress.kubernetes.io/scheme"               = "internet-facing"
-      "alb.ingress.kubernetes.io/certificate-arn"      = aws_acm_certificate.certificate.arn
-      "alb.ingress.kubernetes.io/listen-ports"         = jsonencode([{ "HTTP" : 80 }, { "HTTPS" : 443 }])
-      "alb.ingress.kubernetes.io/ssl-redirect" = "443"
+      "alb.ingress.kubernetes.io/load-balancer-name" = "wordpress-ingress-load-balancer"
+      "alb.ingress.kubernetes.io/target-type"        = "ip"
+      "alb.ingress.kubernetes.io/scheme"             = "internet-facing"
+      "alb.ingress.kubernetes.io/certificate-arn"    = aws_acm_certificate.certificate.arn
+      "alb.ingress.kubernetes.io/listen-ports"       = jsonencode([{ "HTTP" : 80 }, { "HTTPS" : 443 }])
+      "alb.ingress.kubernetes.io/ssl-redirect"       = "443"
     }
   }
   wait_for_load_balancer = true
@@ -111,12 +111,12 @@ resource "kubernetes_ingress_v1" "wordpress_ingress" {
 }
 
 data "aws_lb" "wordpress" {
-  name = "wordpress-ingress-load-balancer"
-  depends_on = [ kubernetes_ingress_v1.wordpress_ingress ]
+  name       = "wordpress-ingress-load-balancer"
+  depends_on = [kubernetes_ingress_v1.wordpress_ingress]
 }
 
 resource "null_resource" "wait_for_load_balancer_active" {
-  depends_on = [ kubernetes_ingress_v1.wordpress_ingress ]
+  depends_on = [kubernetes_ingress_v1.wordpress_ingress]
   provisioner "local-exec" {
     command = "aws elbv2 wait load-balancer-available --names wordpress-ingress-load-balancer"
   }
@@ -131,7 +131,7 @@ resource "aws_route53_record" "wordpress" {
     zone_id                = data.aws_lb.wordpress.zone_id
     evaluate_target_health = false
   }
-  depends_on = [ null_resource.wait_for_load_balancer_active ]
+  depends_on = [null_resource.wait_for_load_balancer_active]
 }
 
 output "application_url" {

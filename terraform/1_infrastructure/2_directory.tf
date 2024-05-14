@@ -20,10 +20,10 @@ resource "aws_secretsmanager_secret" "mcgruff_active_directory_credential" {
 }
 
 resource "aws_secretsmanager_secret_version" "mcgruff_active_directory_credential" {
-  secret_id     = aws_secretsmanager_secret.mcgruff_active_directory_credential.id
+  secret_id = aws_secretsmanager_secret.mcgruff_active_directory_credential.id
   secret_string = jsonencode({
     user_name = "Admin"
-    password = random_string.mcgruff_active_directory_password.result
+    password  = random_string.mcgruff_active_directory_password.result
   })
 }
 
