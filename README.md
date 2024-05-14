@@ -87,7 +87,7 @@ Also using: AWS [IAM](https://aws.amazon.com/iam/) / [ACM](https://aws.amazon.co
 
 1. First, create the infrastructure resources:
 
-   **(First run only)
+   **(First run only)**
    ```
    terraform init
    ```
@@ -97,7 +97,7 @@ Also using: AWS [IAM](https://aws.amazon.com/iam/) / [ACM](https://aws.amazon.co
    terraform apply -var-file="../global.tfvars"
    ```
 
-   **Hint:** You can use `pv` to provide a running timed-elapsed: `terraform apply -var-file="../global.tfvars" | pv -t`
+   **Hint:** You can use `pv` to provide a running time-elapsed: `terraform apply -var-file="../global.tfvars" | pv -t`
 
    Allow this to complete (approx. 35 minutes).
 
@@ -180,7 +180,13 @@ Resources will need to be cleaned up in reverse order of their creation:
 
 * **Resource version updates/upgrades** -   AWS makes availiable update/upgrade services for many/most components if provides (notable exception: the [AWS load-balancer controller](https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.4/deploy/installation/#create-update-strategy)) - you will likely want to investigate/implement these in a production environment.  (TODO: modify this project to implement those as a best practice).
 
-* **Individual** `.tf` files can be moved into/out-of respective `disabled` folders to remove/create portioins of a config.
+* **Partial configurations** - `.tf` files can be moved into/out-of associated `disabled` folders to remove/create portions of a config.  There are dependencies between most files in a config, however - these are refelected by the file name prefixes (e.g. `2_cluster.tf`), be sure to enable/disable these in order.
+
+  Note: if installing files piece-meal, you may need to update the Terraform libraries installed in the config, i.e.:
+
+  ```
+  terraform init -upgrade
+  ```
 
 * **AWS CLI credentials timeout** - This can occur during Terraform `apply` and may result in interruption of the run (potentially causing corruption/sync problems between the actual resources and the Terraform state file.)
 
