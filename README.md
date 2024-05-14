@@ -227,6 +227,11 @@ Resources will need to be cleaned up in reverse order of their creation:
   ```
   helm search repo eks/aws-load-balancer-controller --versions
   ```
+* **View EKS cluster add-on versions**
+
+  ```
+  aws eks describe-addon-versions --adon-name vpc-cni --no-cli-pager
+  ```
 
 * **View Kubernetes logs** - for the application deployment:
 

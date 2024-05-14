@@ -15,17 +15,17 @@ module "eks" {
   }
 
   cluster_addons = {
+    vpc-cni = {
+      version = "v1.18.1-eksbuild.3"
+    }
     coredns = {
-      # most_recent = true
+      version = "v1.11.1-eksbuild.9"
     }
     kube-proxy = {
-      # most_recent = true
-    }
-    vpc-cni = {
-      # most_recent = true
+      version = "v1.29.3-eksbuild.2"
     }
     aws-ebs-csi-driver = {
-      # most_recent = true
+      version = "v1.30.0-eksbuild.1"
     }
   }
 
@@ -41,7 +41,7 @@ module "eks" {
       name           = var.node_group_name
       subnet_ids     = module.vpc.private_subnets
       instance_types = ["t2.small"]
-      capacity_type  = "SPOT"
+      capacity_type  = "ON_DEMAND"
       disk_size      = 10
 
       min_size     = 1
