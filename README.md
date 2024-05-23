@@ -12,7 +12,7 @@ Tested using:
 
 * Kubernetes 1.29
 
-* Terraform 1.8.3
+* Terraform 1.8.4 / OpenTofu 1.7.1
 
 * Kubectl 1.30.0
 
@@ -139,7 +139,7 @@ Also using: AWS [IAM](https://aws.amazon.com/iam/) / [ACM](https://aws.amazon.co
 |                  | cluster.tf       |  10:52 |   12:11 |
 |                  | directory.tf     |  32:52 |    8:14 |
 |                  | jump_host.tf     |   2:54 |    ?:?? |
-| 2_application    | (all)            |   9:17 |    ?:?? |
+| 2_application    | (all)            |   9:17 |    6:04 |
 |                  | database.tf      |   4:56 |    4:50 |
 |                  | load_balancer.tf |   0:31 |    0:15 |
 |                  | deployment.tf    |   0:41 |    0:06 |

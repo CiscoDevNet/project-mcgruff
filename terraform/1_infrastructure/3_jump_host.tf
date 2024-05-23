@@ -100,7 +100,6 @@ resource "aws_instance" "jump_host" {
   subnet_id              = data.aws_subnets.vpc_public_subnets.ids[0]
   iam_instance_profile   = aws_iam_role.active_directory_domain_admin.name
   vpc_security_group_ids = [aws_security_group.allow_rds.id]
-  # key_name               = var.key_pair_name
   key_name               = aws_key_pair.jump_host_key_pair.key_name
   get_password_data      = true
 
@@ -116,7 +115,7 @@ resource "aws_instance" "jump_host" {
   DOC
 
   tags = {
-    Name = "active-directory-jump-host"
+    Name = "mcgruff-active-directory-jump-host"
   }
 
   depends_on = [aws_security_group.allow_rds]
