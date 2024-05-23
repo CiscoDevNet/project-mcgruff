@@ -83,8 +83,6 @@ resource "aws_db_instance" "database" {
   ]
 }
 
-output "Database_Secrets_Manager_Credential" {
-  value = {
-    Credential_Name = aws_secretsmanager_secret.mcgruff_database_credential.name
-  }
+output "Secrets_Manager_Database_Credential_Name" {
+  value = aws_secretsmanager_secret.mcgruff_database_credential.name
 }

@@ -72,6 +72,3 @@ variable "domain_name" {
   type        = string
 }
 
-variable "key_pair_name" {
-  description = "EC2 key pair used for accessing the AD jump host"
-}

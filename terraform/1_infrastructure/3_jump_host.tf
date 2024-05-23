@@ -77,13 +77,31 @@ data "aws_ssm_parameter" "jump_host_windows_ami" {
   name = "/aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base"
 }
 
+resource "tls_private_key" "jump_host_private_key" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "aws_key_pair" "jump_host_key_pair" {
+  key_name_prefix   = "mcgruff-"
+  public_key = tls_private_key.jump_host_private_key.public_key_openssh
+}
+
+resource "local_sensitive_file" "jump_host_private_key_file" {
+  filename = "${aws_key_pair.jump_host_key_pair.key_name}.pem"
+  file_permission = "600"
+  directory_permission = "700"
+  content = tls_private_key.jump_host_private_key.private_key_pem
+}
+
 resource "aws_instance" "jump_host" {
   ami                    = data.aws_ssm_parameter.jump_host_windows_ami.value
   instance_type          = "t2.small"
   subnet_id              = data.aws_subnets.vpc_public_subnets.ids[0]
   iam_instance_profile   = aws_iam_role.active_directory_domain_admin.name
   vpc_security_group_ids = [aws_security_group.allow_rds.id]
-  key_name               = var.key_pair_name
+  # key_name               = var.key_pair_name
+  key_name               = aws_key_pair.jump_host_key_pair.key_name
   get_password_data      = true
 
   metadata_options {
@@ -119,7 +137,6 @@ resource "aws_ssm_association" "AWS-JoinDirectoryServiceDomain" {
   parameters = {
     directoryId   = aws_directory_service_directory.directory.id
     directoryName = aws_directory_service_directory.directory.name
-    # dnsIpAddresses = jsonencode(aws_directory_service_directory.directory.dns_ip_addresses)
     dnsIpAddresses = sort(aws_directory_service_directory.directory.dns_ip_addresses)[0]
   }
 
@@ -130,8 +147,10 @@ resource "aws_ssm_association" "AWS-JoinDirectoryServiceDomain" {
   }
 }
 
-output "Active_Directory_Management_Instance_Location" {
-  value = {
-    Public_DNS = "${aws_instance.jump_host.public_dns}"
-  }
+output "Active_Directory_Management_Instance_Public_DNS" {
+  value = "${aws_instance.jump_host.public_dns}"
+}
+
+output "Active_Directory_Management_Instance_Private_Key_FIle_Name" {
+  value = "${aws_key_pair.jump_host_key_pair.key_name}.pem"
 }

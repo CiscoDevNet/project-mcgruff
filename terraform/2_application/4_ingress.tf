@@ -134,6 +134,6 @@ resource "aws_route53_record" "wordpress" {
   depends_on = [null_resource.wait_for_load_balancer_active]
 }
 
-output "application_url" {
+output "Application_URL" {
   value = "https://${aws_route53_record.wordpress.fqdn}"
 }

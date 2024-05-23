@@ -1,8 +1,6 @@
 # Required variables
 # An AWS Route 53 registered domain name owned by the AWS admin user must be provided.
 domain_name = "mcgruff.click"
-# EC2 key pair name for AD jump host
-key_pair_name = "mcgruff"
 
 # Override variable defaults with values below as desired.
 

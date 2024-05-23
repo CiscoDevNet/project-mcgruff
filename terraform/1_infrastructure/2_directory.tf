@@ -41,10 +41,8 @@ resource "aws_directory_service_directory" "directory" {
   }
 }
 
-output "Active_Directory_Secrets_Manager_Credential" {
-  value = {
-    Credential_Name = aws_secretsmanager_secret.mcgruff_active_directory_credential.name
-  }
+output "Secrets_Manager_Active_Directory_Credential_Name" {
+  value = aws_secretsmanager_secret.mcgruff_active_directory_credential.name
 }
 
 

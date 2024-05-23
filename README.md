@@ -71,19 +71,15 @@ Also using: AWS [IAM](https://aws.amazon.com/iam/) / [ACM](https://aws.amazon.co
    cd project-mcgruff
    ```
 
-1. Create a new instance connection key pair (i.e. named `mcgruff`) via **EC2/Network & Security/Key Pairs**.
-
-   **Note:** be sure to download and save the associated `PEM` file, as you will need this to decrypt the AD management instance's admin password - i.e. for RDP access.
-
 1. Create an S3 bucket - this will be used for Terraform state files.
 
-   Be sure keep encryption and bucket versioning default/enabled.
+   Be sure to keep encryption and bucket versioning enabled.
 
-   Then, update `terraform/infrastructure/provider.tf` and `terraform/infrastructure/provider.tf` S3 `backend` sections with your S3 bucket name and region.
+   Then, update `terraform/infrastructure/provider.tf` and `terraform/infrastructure/provider.tf` `terraform.backend` sections with your S3 bucket name and region.
 
 1. Edit `/terraform/global.tfvars`.
 
-   All values can be left commented/default except `domain_name` and `key_pair_name`, which must be provided.
+   All values can be left commented/default except `domain_name`, which must be provided (see [Pre-Requisites](#pre-requisites) above).
 
 1. First, create the infrastructure resources:
 
@@ -101,17 +97,17 @@ Also using: AWS [IAM](https://aws.amazon.com/iam/) / [ACM](https://aws.amazon.co
 
    Allow this to complete (approx. 35 minutes).
 
-   Output will indicate the DNS name of the Active Directory management instance (for connection via RDP) and the  [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) name of the admin credentia:
+   Output will indicate the DNS name of the Active Directory management instance, the associated AWS EC2 key pair file name (for retrieving the local Administrator password when connecting via RDP) and the  [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) name for the Active Directory Admin credential (for domain login to the management instance):
 
    ```
-   Active_Directory_management_instance_details = {
-    "Credential_SecretManager_Name" = "active-directory-credential-20240redacted5093500000001"
-   "Public_DNS" = "ec2-redacted-51.compute-1.amazonaws.com"
-   }
+   Active_Directory_Management_Instance_Private_Key_FIle_Name = "mcgruff-20240523161937071600000001.pem"
+   Active_Directory_Management_Instance_Public_DNS = "ec2-44-223-106-111.compute-1.amazonaws.com"
+   Secrets_Manager_Active_Directory_Credential_Name = "mcgruff-active-directory-credential-20240523154127198200000001"
    ```
+
    An RDP session to the AD management instance's local machine Administrator account will require decrypting the Admin password via the AWS console: **EC2/Instances/Instance/Connect**.  With the password, you can use a standard RDP client to connect using the `Public_DNS` address.
 
-   **Note:** It may take a few minutes before the AD management instance is fully started/online/SSM-managed before you can connect to it.
+   **Note:** It may take a few minutes before the AD management instance is fully started/online/SSM-managed before you can connect to it.  Note also that joining it to the AD domain (which happens on first start-up) causes it to reboot again.
 
 1. Next, create resources and deploy the application:
 
@@ -127,26 +123,27 @@ Also using: AWS [IAM](https://aws.amazon.com/iam/) / [ACM](https://aws.amazon.co
 
    Allow this to complete (approx. 10 minutes).
 
-   Output will provide the URL for the running application:
+   Output will provide the AWS Secrets Manager secret name for the database Admin credential, and the URL for the running application:
 
-   TBD EXAMPLE
-
-1. Output from the application deployment will indicate the application URL, based on the provided domain name, e.g.: `https://wordpress.mcgruff.click`
+   ```
+   Application_URL = "https://wordpress.mcgruff.click"
+   Secrets_Manager_Database_Credential_Name = "mcgruff-database-credential-20240523163719521000000001"
+   ```
 
 ## Example/estimated apply times (us-east-1)
 
-| Config         | File             | Create | Destroy |
-| -------------- | ---------------- | ------ | ------- |
-| infrastructure | (all)            |  34:54 |   11:02 |
-|                | vpc.tf           |   2:12 |    0:57 |
-|                | cluster.tf       |  10:52 |   12:11 |
-|                | directory.tf     |  32:52 |    8:14 |
-|                | jump_host.tf     |   2:54 |    ?:?? |
-| application    | (all)            |   9:17 |    ?:?? |
-|                | database.tf      |   4:56 |    4:50 |
-|                | load_balancer.tf |   0:31 |    0:15 |
-|                | deployment.tf    |   0:41 |    0:06 |
-|                | ingress.tf       |   3:35 |    1:36 |
+| Config           | File             | Create | Destroy |
+| ---------------- | ---------------- | ------ | ------- |
+| 1_infrastructure | (all)            |  34:54 |   11:02 |
+|                  | vpc.tf           |   2:12 |    0:57 |
+|                  | cluster.tf       |  10:52 |   12:11 |
+|                  | directory.tf     |  32:52 |    8:14 |
+|                  | jump_host.tf     |   2:54 |    ?:?? |
+| 2_application    | (all)            |   9:17 |    ?:?? |
+|                  | database.tf      |   4:56 |    4:50 |
+|                  | load_balancer.tf |   0:31 |    0:15 |
+|                  | deployment.tf    |   0:41 |    0:06 |
+|                  | ingress.tf       |   3:35 |    1:36 |
 
 ## Cleanup AWS Resources
 
