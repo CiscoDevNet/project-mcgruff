@@ -1,4 +1,4 @@
-<mxfile host="Electron" modified="2024-05-13T00:43:46.255Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.2.5 Chrome/120.0.6099.109 Electron/28.1.0 Safari/537.36" etag="rYzketEBJcQAQ_Y-gsW2" version="24.2.5" type="device">
+<mxfile host="Electron" modified="2024-07-15T18:53:07.137Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.5.3 Chrome/124.0.6367.207 Electron/30.0.6 Safari/537.36" version="24.5.3" etag="yya3gZ5hxiTxe7uFcKFC" type="device">
   <diagram name="Page-1" id="ASzdR2K4lp8sceqfkvw2">
     <mxGraphModel dx="1114" dy="851" grid="1" gridSize="5" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" background="#ffffff" math="0" shadow="0">
       <root>
@@ -100,7 +100,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="iQiyRGZ0toG0-9nE7kbg-85" value="project-mcgruff" style="rounded=1;whiteSpace=wrap;html=1;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;fillColor=none;" parent="1" vertex="1">
+        <mxCell id="iQiyRGZ0toG0-9nE7kbg-85" value="Terraform&lt;br&gt;" style="rounded=1;whiteSpace=wrap;html=1;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;fillColor=none;" parent="1" vertex="1">
           <mxGeometry x="420" y="517.5" width="120" height="120" as="geometry" />
         </mxCell>
       </root>
