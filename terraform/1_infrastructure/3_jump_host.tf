@@ -1,12 +1,7 @@
-resource "aws_security_group" "allow_rds" {
-  name   = "mcgruff-allow-rdp"
+resource "aws_security_group" "active_directory_management_instance" {
+  name   = "mcgruff-active-directory-management-instance"
   vpc_id = module.vpc.vpc_id
-  ingress {
-    from_port   = 3389
-    to_port     = 3389
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -14,12 +9,16 @@ resource "aws_security_group" "allow_rds" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = "mcgruff-allow-rdp"
-  }
-
   depends_on = [module.vpc]
 }
+
+# resource "aws_vpc_security_group_ingress_rule" "active_directory_management_instance_ingress" {
+#   security_group_id            = aws_security_group.active_directory_management_instance.id
+#   from_port                    = 3389
+#   to_port                      = 3389
+#   ip_protocol                  = "tcp"
+#   referenced_security_group_id = aws_security_group.ec2_instance_connect_endpoint.id
+# }
 
 resource "aws_iam_role" "active_directory_domain_admin" {
   name = "active-directory-domain-admin"
@@ -83,23 +82,23 @@ resource "tls_private_key" "jump_host_private_key" {
 }
 
 resource "aws_key_pair" "jump_host_key_pair" {
-  key_name_prefix   = "mcgruff-"
-  public_key = tls_private_key.jump_host_private_key.public_key_openssh
+  key_name_prefix = "mcgruff-"
+  public_key      = tls_private_key.jump_host_private_key.public_key_openssh
 }
 
 resource "local_sensitive_file" "jump_host_private_key_file" {
-  filename = "${aws_key_pair.jump_host_key_pair.key_name}.pem"
-  file_permission = "600"
+  filename             = "${aws_key_pair.jump_host_key_pair.key_name}.pem"
+  file_permission      = "600"
   directory_permission = "700"
-  content = tls_private_key.jump_host_private_key.private_key_pem
+  content              = tls_private_key.jump_host_private_key.private_key_pem
 }
 
 resource "aws_instance" "jump_host" {
   ami                    = data.aws_ssm_parameter.jump_host_windows_ami.value
   instance_type          = "t2.small"
-  subnet_id              = data.aws_subnets.vpc_public_subnets.ids[0]
+  subnet_id              = module.vpc.private_subnets[0]
   iam_instance_profile   = aws_iam_role.active_directory_domain_admin.name
-  vpc_security_group_ids = [aws_security_group.allow_rds.id]
+  vpc_security_group_ids = [aws_security_group.active_directory_management_instance.id]
   key_name               = aws_key_pair.jump_host_key_pair.key_name
   get_password_data      = true
 
@@ -118,7 +117,7 @@ resource "aws_instance" "jump_host" {
     Name = "mcgruff-active-directory-jump-host"
   }
 
-  depends_on = [aws_security_group.allow_rds]
+  depends_on = [aws_security_group.active_directory_management_instance]
 }
 
 data "aws_ssm_document" "AWS-JoinDirectoryServiceDomain" {
@@ -134,20 +133,16 @@ resource "aws_ssm_association" "AWS-JoinDirectoryServiceDomain" {
   }
 
   parameters = {
-    directoryId   = aws_directory_service_directory.directory.id
-    directoryName = aws_directory_service_directory.directory.name
+    directoryId    = aws_directory_service_directory.directory.id
+    directoryName  = aws_directory_service_directory.directory.name
     dnsIpAddresses = sort(aws_directory_service_directory.directory.dns_ip_addresses)[0]
   }
 
-  # Enable and provide an (existing) S3 bucket name to view output logs
-  output_location {
-    s3_bucket_name = "mcgruff-terraform-204a97d0-11b6-4b10-8ed7-85eec2885eaa"
-    s3_key_prefix  = "mcgruff-ssm-command-logs"
-  }
-}
-
-output "Active_Directory_Management_Instance_Public_DNS" {
-  value = "${aws_instance.jump_host.public_dns}"
+  # Enable, and provide a (pre-existing) S3 bucket name to view output logs
+  # output_location {
+  #   s3_bucket_name = "changme"
+  #   s3_key_prefix  = "mcgruff-ssm-command-logs"
+  # }
 }
 
 output "Active_Directory_Management_Instance_Private_Key_FIle_Name" {
