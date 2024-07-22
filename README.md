@@ -97,17 +97,16 @@ Also using: AWS [IAM](https://aws.amazon.com/iam/) / [ACM](https://aws.amazon.co
 
    Allow this to complete (approx. 35 minutes).
 
-   Output will indicate the DNS name of the Active Directory management instance, the associated AWS EC2 key pair file name (for retrieving the local Administrator password when connecting via RDP) and the  [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) name for the Active Directory Admin credential (for domain login to the management instance):
+   Output will indicate the associated AWS EC2 key pair file name (for retrieving the local Administrator password) and the  [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) name for the Active Directory Admin credential (for domain login to the management instance):
 
    ```
    Active_Directory_Management_Instance_Private_Key_FIle_Name = "mcgruff-20240523161937071600000001.pem"
-   Active_Directory_Management_Instance_Public_DNS = "ec2-44-223-106-111.compute-1.amazonaws.com"
    Secrets_Manager_Active_Directory_Credential_Name = "mcgruff-active-directory-credential-20240523154127198200000001"
    ```
 
-   An RDP session to the AD management instance's local machine Administrator account will require decrypting the Admin password via the AWS console: **EC2/Instances/Instance/Connect**.  With the password, you can use a standard RDP client to connect using the `Public_DNS` address.
+   Admin console accesss to the AD management instance will be available only via AWS Fleet Manager, e.g. from the instance **EC2/Instances/Instance/Connect/RDP client** page.  Login can be via the Active Directory admin credentials, or to the local Windows `Administrator` account by first decrypting the password
 
-   **Note:** It may take a few minutes before the AD management instance is fully started/online/SSM-managed before you can connect to it.  Note also that joining it to the AD domain (which happens on first start-up) causes it to reboot again.
+   **Note:** It may take a few minutes before the AD management instance is fully started/online/SSM-managed before you can connect to it.  Note also that joining it to the AD domain (which happens after the directory has been created) causes it to reboot again.
 
 1. Next, create resources and deploy the application:
 
