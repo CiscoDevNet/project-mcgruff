@@ -25,6 +25,13 @@ The main Terraform configuration is in the `main.tf` file. Here are some key com
 
 Clone this repository to your local machine and navigate to the project directory.
 
+```
+git clone https://github.com/CiscoDevNet/project-mcgruff
+
+cd project-mcgruff/terraform/panoptica-cf-deploy
+```
+
+
 ### 2. Generate Panoptica API Key
 
 1. Follow the guide at https://docs.panoptica.app/reference/rest-api-quick-start-guide to generate an API key for Panoptica.
